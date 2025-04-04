@@ -29,6 +29,7 @@ private:
     string passwordHash;
 public:
     User(string uname, string pass) : username(uname), passwordHash(Hasher::simpleHash(pass)) {}
+    User(string uname, string passHash, bool isHashed) : username(uname), passwordHash(passHash) {}
 
     string getUsername() const { return username; }
     string getPasswordHash() const { return passwordHash; }
@@ -48,7 +49,7 @@ public:
         ifstream file(userDataFile);
         string uname, pHash;
         while (file >> uname >> pHash) {
-            users.emplace_back(uname, pHash); // Use protected constructor or update logic if needed
+            users.emplace_back(uname, pHash, true);
         }
     }
 
@@ -108,12 +109,13 @@ public:
     void displayUsers() {
         cout << "\nRegistered Users (Encrypted Passwords):\n";
         for (const auto& user : users) {
-            cout << "Username: " << user.getUsername() << " | Encrypted Password: " << user.getPasswordHash() << "\n";
+            cout << "Username: " << user.getUsername()
+                 << " | Encrypted Password: " << user.getPasswordHash() << "\n";
         }
     }
 };
 
-// ---------- Abstract Device Class ----------
+// ---------- Abstract SerialDevice Class ----------
 class SerialDevice {
 protected:
     HANDLE serialHandle;
@@ -137,7 +139,7 @@ public:
     }
 
     string readData() override {
-        char buffer[64];
+        char buffer[128];
         DWORD bytesRead;
         if (ReadFile(serialHandle, buffer, sizeof(buffer) - 1, &bytesRead, NULL)) {
             buffer[bytesRead] = '\0';
@@ -213,13 +215,20 @@ public:
 
     void mainMenu() {
         while (true) {
-            cout << "\nSelect Mode:\n1. Auto Mode\n2. Remote Mode\n3. Show History\n4. Show Current Sensor Data\n5. Show Registered Users\n6. Logout\nEnter choice: ";
+            cout << "\nSelect Mode:\n"
+                 << "1. Auto Mode\n"
+                 << "2. Remote Mode\n"
+                 << "3. Show History\n"
+                 << "4. Show Current Sensor Data\n"
+                 << "5. Show Registered Users\n"
+                 << "6. Logout\n"
+                 << "Enter choice: ";
             int choice;
             cin >> choice;
 
             switch (choice) {
                 case 1:
-                    cout << "Auto Mode Activated.\n";
+                    cout << "Auto Mode Activated (Handled on ESP32).\n";
                     break;
                 case 2:
                     pump.remoteControl();
